@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kjk/dailyrotate"
+	"github.com/isutare412/dailyrotate"
 )
 
 func onLogClose(path string, didRotate bool) {

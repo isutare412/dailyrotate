@@ -1,4 +1,4 @@
-module github.com/kjk/dailyrotate
+module github.com/isutare412/dailyrotate
 
 go 1.13
 
