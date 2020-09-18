@@ -51,7 +51,7 @@ func TestBasic(t *testing.T) {
 	onClose := func(path string, didRotate bool) {
 		onCloseCalled = true
 	}
-	f, err := NewFile(pathFormat, onClose)
+	f, err := NewFile(pathFormat, nil, onClose)
 	assert.NoError(t, err)
 	assert.NotNil(t, f)
 	testWrite(t, f, pathExp)
@@ -72,9 +72,8 @@ func TestBasic_Location(t *testing.T) {
 	loc := time.FixedZone("UTC-8", -8*60*60)
 	pathFormat := filepath.Join("test_dir", "third", "2006-01-02.txt")
 	pathExp := time.Now().In(loc).Format(pathFormat)
-	f, err := NewFile(pathFormat, nil)
+	f, err := NewFile(pathFormat, loc, nil)
 	assert.NoError(t, err)
-	f.Location = loc
 	assert.Equal(t, loc, f.Location)
 
 	n, err := io.WriteString(f, "hello\n")
@@ -96,7 +95,7 @@ func TestPathGenerator(t *testing.T) {
 		nCalled++
 		return t.Format(pathFormat)
 	}
-	f, err := NewFileWithPathGenerator(pathGenerator, nil)
+	f, err := NewFileWithPathGenerator(pathGenerator, nil, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, f)
 	testWrite(t, f, pathExp)

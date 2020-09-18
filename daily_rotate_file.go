@@ -104,6 +104,8 @@ func (f *File) reopenIfNeeded() error {
 // a name of the file. It should be unique in a given day e.g. 2006-01-02.txt.
 // If you need more flexibility, use NewFileWithPathGenerator which accepts a
 // function that generates a file path.
+// By default logs rotate at midnight UTC time. If you set location to something
+// other than nil, logs will rotate at midnight of the location.
 // onClose is an optional function that will be called every time existing file
 // is closed, either as a result calling Close or due to being rotated.
 // didRotate will be true if it was closed due to rotation.
@@ -112,8 +114,12 @@ func (f *File) reopenIfNeeded() error {
 // Warning: time.Format might format more than you expect e.g.
 // time.Now().Format(`/logs/dir-2/2006-01-02.txt`) will change "-2" in "dir-2" to
 // current day. For better control over path generation, use NewFileWithPathGenerator
-func NewFile(pathFormat string, onClose func(path string, didRotate bool)) (*File, error) {
-	return newFile(pathFormat, nil, onClose)
+func NewFile(
+	pathFormat string,
+	location *time.Location,
+	onClose func(path string, didRotate bool),
+) (*File, error) {
+	return newFile(pathFormat, nil, location, onClose)
 }
 
 // NewFileWithPathGenerator creates a new file that will be rotated daily
@@ -121,20 +127,35 @@ func NewFile(pathFormat string, onClose func(path string, didRotate bool)) (*Fil
 // pathGenerator is a function that will return a path for a daily log file.
 // It should be unique in a given day e.g. time.Format of "2006-01-02.txt"
 // creates a string unique for the day.
+// By default logs rotate at midnight UTC time. If you set location to something
+// other than nil, logs will rotate at midnight of the location.
 // onClose is an optional function that will be called every time existing file
 // is closed, either as a result calling Close or due to being rotated.
 // didRotate will be true if it was closed due to rotation.
 // If onClose() takes a long time, you should do it in a background goroutine
 // (it blocks all other operations, including writes)
-func NewFileWithPathGenerator(pathGenerator func(time.Time) string, onClose func(path string, didRotate bool)) (*File, error) {
-	return newFile("", pathGenerator, onClose)
+func NewFileWithPathGenerator(
+	pathGenerator func(time.Time) string,
+	location *time.Location,
+	onClose func(path string, didRotate bool),
+) (*File, error) {
+	return newFile("", pathGenerator, location, onClose)
 }
 
-func newFile(pathFormat string, pathGenerator func(time.Time) string, onClose func(path string, didRotate bool)) (*File, error) {
+func newFile(
+	pathFormat string,
+	pathGenerator func(time.Time) string,
+	location *time.Location,
+	onClose func(path string, didRotate bool),
+) (*File, error) {
+	if location == nil {
+		location = time.UTC
+	}
+
 	f := &File{
 		pathFormat:    pathFormat,
 		pathGenerator: pathGenerator,
-		Location:      time.UTC,
+		Location:      location,
 	}
 	// force early failure if we can't open the file
 	// note that we don't set onClose yet so that it won't get called due to
