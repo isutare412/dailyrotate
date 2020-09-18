@@ -164,10 +164,6 @@ func newFile(
 	if err != nil {
 		return nil, err
 	}
-	err = f.close(false)
-	if err != nil {
-		return nil, err
-	}
 	f.onClose = onClose
 	return f, nil
 }
